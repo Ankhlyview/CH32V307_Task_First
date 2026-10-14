@@ -1,0 +1,27 @@
+这个ST7735S的库的函数看看就行，除了初始化就是各种各样的打印函数
+
+这个是屏幕使用的接口,可以在St7735s.h中找到
+#define ST7735S_SCL_PIN     B13
+#define ST7735S_SDA_PIN     B15
+#define ST7735S_RES_PIN     B7
+#define ST7735S_DC_PIN      D7
+#define ST7735S_CS_PIN      D4
+#define ST7735S_BL_PIN      D0
+
+屏幕颜色可以添加，但是记得改Menu.h的#define COLOR_LIST_COUNT     8的值
+
+这是7个方向的按键转3个引脚的使用引脚，KEY_A2_PIN是最高位
+#define KEY_A0_PIN   D8
+#define KEY_A1_PIN   B12
+#define KEY_A2_PIN   B14
+
+这个是正常使用LED，用计时器中断使用LED，PWM波输出引脚
+#define LED_PIN              D1
+#define LED_PIT_PIN          A15
+#define PWM_PIN              TIM1_PWM_MAP0_CH1_A8
+
+这是写入Flash的位置和检验的值(尽量不要修改)
+#define FLASH_SECTOR         63
+#define FLASH_PAGE           0
+#define PARAMS_MAGIC         0xA5A5A5A5
+

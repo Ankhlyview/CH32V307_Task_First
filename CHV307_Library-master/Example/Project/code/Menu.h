@@ -3,7 +3,7 @@
 
 #include "zf_common_headfile.h"
 
-// ==================== 参数结构体 ====================
+
 typedef struct
 {
     uint32_t magic;
@@ -23,21 +23,19 @@ typedef struct
     uint32   charater_color;
 } params_menu;
 
-// ==================== 引脚定义 ====================
+
 #define LED_PIN              D1
 #define LED_PIT_PIN          A15
 #define PWM_PIN              TIM1_PWM_MAP0_CH1_A8
 
-// ==================== Flash ====================
+
 #define FLASH_SECTOR         63
 #define FLASH_PAGE           0
 #define PARAMS_MAGIC         0xA5A5A5A5
 
-// ==================== 颜色列表 ====================
 #define COLOR_LIST_COUNT     8
 extern const uint16 color_list[COLOR_LIST_COUNT];
 
-// ==================== 全局参数 ====================
 extern params_menu params;
 void params_save(void);
 void params_load(void);

@@ -1,7 +1,7 @@
 #include "St7735s.h"
 #include "zf_common_headfile.h"
 
-// 外部字体
+// 这个是zf库的字体
 extern const uint8 ascii_font_8x16[][16];
 
 // ==================== 内部写命令/数据 ====================

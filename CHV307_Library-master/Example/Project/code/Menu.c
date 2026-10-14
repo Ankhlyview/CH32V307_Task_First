@@ -2,10 +2,12 @@
 #include "Key.h"
 #include "St7735s.h"
 
-// 这个是一个全局变量
+// 这个是一个全局变量，这个的作用就是用来接受从flash中读出的值，然后用来给一些外设进行设置
 params_menu params;
+
 // Flash 这就是一个缓冲的位置
 static uint32 flash_buffer[256];
+
 // 常用的颜色
 const uint16 color_list[COLOR_LIST_COUNT] = {
     ST7735S_WHITE,
@@ -18,6 +20,7 @@ const uint16 color_list[COLOR_LIST_COUNT] = {
     ST7735S_PINK,
 };
 
+//给params这个结构一个初始值
 static void params_init(void)
 {
     params.magic = PARAMS_MAGIC;
@@ -61,6 +64,7 @@ void params_reset(void)
     params_save();
 }
 
+// 将params应用给所有可以设置的外设，其实这里还少一个颜色的应用:(但是我不想写了
 void params_apply(void)
 {
     gpio_set_level(LED_PIN,params.led_level);
@@ -71,7 +75,7 @@ void params_apply(void)
         pwm_set_duty(PWM_PIN,0);
 }
 
-// 节点的属性
+// 节点的属性,就是指定这个节点具体作用是什么
 typedef enum{
     type_dir = 0,
     type_u8,
@@ -85,11 +89,12 @@ typedef struct node{
     node_type type;
     struct node *parent;
     struct node *children[5];
-    void *param;  ////////////////////
-    int32 min,max,step;
-    void (*action)(void); /////////////////////
+    void *param;  //用void*来管理不同类型的参数
+    int32 min,max,step;//这个是这个节点如果有参数调节的化，这个参数的上线下线，还有调整的步长
+    void (*action)(void); //C的引用函数指针
 }node;
 
+// 声明节点
 static node node_main,node_led,node_buzzer,node_screen,node_flash,node_other;
 static node led_gpio_on,led_pit_on,led_pit_preiod;
 static node buzzer_on,buzzer_freq,buzzer_duty;
@@ -97,11 +102,13 @@ static node screen_sc,screen_cc;
 static node flash_save,flash_load,flash_reset;
 // static node other;
 
-static node *cur_node;
-static uint8 cur_index;
-static node *post_node;
-static uint8 edit_mode;
 
+static node *cur_node;// 目前节点
+static uint8 cur_index;// 目前节点的子节点的index
+static node *post_node;// 编辑的节点
+static uint8 edit_mode;// 是否处于编辑模式
+
+// 从一个节点读取参数
 static int32 get_param(node *item)
 {
     if(item->type == type_u8)
@@ -111,6 +118,7 @@ static int32 get_param(node *item)
     return 0;
 }
 
+// 给一个节点写入参数
 static void set_param(node *item,int32 val)
 {
     if(item->type == type_u8)
@@ -119,6 +127,7 @@ static void set_param(node *item,int32 val)
         *(uint32 *)item->param = val;
 }
 
+// 这个就是一些行动
 static void action_save(void)   { params_save(); }
 static void action_load(void)   { params_load(); params_apply(); }
 static void action_reset(void)  { params_reset(); params_apply(); }
@@ -134,13 +143,14 @@ static void action_pwm(void)
 static void action_about(void)
 {
     st7735s_clear(params.screen_color);
-    st7735s_show_string(0,  0, "Terraria!haowan",        ST7735S_PINK,  params.screen_color);
-    st7735s_show_string(0, 20, "Minecraft!aiwan",    ST7735S_PINK, params.screen_color);
-    st7735s_show_string(0, 40, "StreetFighter6!wan",       ST7735S_PINK, params.screen_color);
+    st7735s_show_string(0,  0, "Terraria:)",        ST7735S_PINK,  params.screen_color);
+    st7735s_show_string(0, 20, "Minecraft:)",    ST7735S_PINK, params.screen_color);
+    st7735s_show_string(0, 40, "StreetFighter6:)",       ST7735S_PINK, params.screen_color);
     st7735s_show_string(0, 60, "SlaytheSpire:)", ST7735S_PINK, params.screen_color);
     system_delay_ms(2000);
 }
 
+// 初始化一个节点
 static void node_init(node*item,const char*name,node_type type,node *parent,void *param,uint32 min,uint32 max,uint32 step,void (*action)(void))
 {
     item->name = name;
@@ -155,6 +165,7 @@ static void node_init(node*item,const char*name,node_type type,node *parent,void
         item->children[i] = NULL;
 }
 
+//菜单所有节点初始化
 void menu_init(void)
 {
     // LED 子菜单
@@ -191,7 +202,7 @@ void menu_init(void)
     node_flash.children[1] = &flash_load;
     node_flash.children[2] = &flash_reset;
 
-    // About
+    // 夹带私货了
     node_init(&node_other, "About", type_action, &node_main, NULL, 0, 0, 0, action_about);
 
     // 主菜单
@@ -209,6 +220,7 @@ void menu_init(void)
     post_node = NULL;
 }
 
+// 这个就是屏幕上显示的东西，在每一个while中都要进行一次
 void menu_draw(void)
 {
     st7735s_clear(params.screen_color);
@@ -238,8 +250,10 @@ void menu_draw(void)
         st7735s_show_string(64,0,"EDIT",ST7735S_GREEN, params.screen_color);
 }
 
+// 按键以及对应的行为，这个有一个按键没有用：）
 void menu_handle_key(uint8 key)
 {
+    // 这个是在编辑模式下的情况
     if (edit_mode && post_node != NULL)
     {
         int32_t val = get_param(post_node);
@@ -285,7 +299,7 @@ void menu_handle_key(uint8 key)
         if (post_node->action) post_node->action();
         return;
     }
-
+    // 这个就是正常的页面转化了
     switch (key)
     {
         case KEY_D:

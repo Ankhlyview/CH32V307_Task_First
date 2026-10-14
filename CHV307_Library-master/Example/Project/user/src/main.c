@@ -8,16 +8,14 @@ int main(void)
     clock_init(SYSTEM_CLOCK_120M);
     debug_init();
 
-    // 1. 从 Flash 加载参数
     params_load();
-    params_reset();          // 恢复默认并写入 Flash
-    params_apply();      // 应用到硬件
-    // 2. LED 初始化
+    params_reset();      
+    params_apply();     
+
     gpio_init(LED_PIN,     GPO, 0, GPO_PUSH_PULL);
     gpio_init(LED_PIT_PIN, GPO, 0, GPO_PUSH_PULL);
     gpio_set_level(LED_PIN, params.led_level ? 1 : 0);
 
-    // 3. PWM 蜂鸣器
     pwm_init(PWM_PIN, params.pwm_freq, params.pwm_duty);
     if (!params.pwm_is_able) pwm_set_duty(PWM_PIN, 0);
 
